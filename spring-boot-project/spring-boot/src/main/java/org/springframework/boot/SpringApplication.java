@@ -554,12 +554,25 @@ public class SpringApplication {
 	 * @see #configureProfiles(ConfigurableEnvironment, String[])
 	 * @see #configurePropertySources(ConfigurableEnvironment, String[])
 	 */
+
+	/**
+	 * 配置 Environment
+	 */
 	protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
 		if (this.addConversionService) {
+			// 设置 ConversionService，用途：用于类型转换，细节参见下面的文章链接。
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
+
+		// 添加两个 PropertySource：
+		//  - defaultProperties：
+		//  	- 自定义参数扩展点，我们可以自定义配置
+		//  - commandLineArgs：
+		//  	- 由 args 包装的的 PropertySources，相当于：把命令行参数也存储在 Environment 中
 		configurePropertySources(environment, args);
+
+		// 处理 Spring Profiles，注意不是 Maven Profiles！
 		configureProfiles(environment, args);
 	}
 
@@ -628,13 +641,21 @@ public class SpringApplication {
 		}
 	}
 
+	/**
+	 * 打印 Banner
+	 */
 	private Banner printBanner(ConfigurableEnvironment environment) {
+		// 关闭Banner打印
 		if (this.bannerMode == Banner.Mode.OFF) {
 			return null;
 		}
 		ResourceLoader resourceLoader = (this.resourceLoader != null) ? this.resourceLoader
 				: new DefaultResourceLoader(getClassLoader());
+
+		// 查找配置是否有 Banner 指定，如果没有，则从根目录下找：banner.txt、banner.git、banner.jpg、banner.png（都找不到则输出默认：SpringBootBanner.class）
 		SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(resourceLoader, this.banner);
+
+		// 按不同输出源进行输出：CONSOLE 和 LOG
 		if (this.bannerMode == Mode.LOG) {
 			return bannerPrinter.print(environment, this.mainApplicationClass, logger);
 		}
@@ -647,6 +668,20 @@ public class SpringApplication {
 	 * class before falling back to a suitable default.
 	 * @return the application context (not yet refreshed)
 	 * @see #setApplicationContextClass(Class)
+	 */
+
+	/**
+	 * 按 this.webApplicationType 创建具体的 ApplicationContext
+	 *
+	 * - SERVLET：
+	 * 		- 说明：servlet web server，使我们最常用的容器
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigServletWebServerApplicationContext
+	 * - REACTIVE：
+	 * 		- 说明：reactive web server
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigReactiveWebServerApplicationContext
+	 * - NONE：
+	 * 		- 说明：不是 web server
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigApplicationContext
 	 */
 	protected ConfigurableApplicationContext createApplicationContext() {
 		Class<?> contextClass = this.applicationContextClass;
