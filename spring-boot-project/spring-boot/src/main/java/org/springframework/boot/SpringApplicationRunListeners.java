@@ -42,12 +42,18 @@ class SpringApplicationRunListeners {
 		this.listeners = new ArrayList<>(listeners);
 	}
 
+	/**
+	 * 开始启动
+	 */
 	public void starting() {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.starting();
 		}
 	}
 
+	/**
+	 * Environment 准备ok
+	 */
 	public void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.environmentPrepared(environment);

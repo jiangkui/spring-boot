@@ -58,7 +58,21 @@ public enum WebApplicationType {
 
 	private static final String REACTIVE_APPLICATION_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext";
 
+	/**
+	 * 根据 Classpath 推断 WebApplicationType，有三种类型，后续会根据这三种类型创建不同的 ApplicationContext：
+	 *
+	 * - SERVLET：
+	 * 		- 说明：servlet web server，使我们最常用的容器
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigServletWebServerApplicationContext
+	 * - REACTIVE：
+	 * 		- 说明：reactive web server
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigReactiveWebServerApplicationContext
+	 * - NONE：
+	 * 		- 说明：不是 web server
+	 * 		- 实现：ApplicationContext实现为： AnnotationConfigApplicationContext
+	 */
 	static WebApplicationType deduceFromClasspath() {
+		// ClassUtils.isPresent("是否存在的Class", classloader); 是通过 Class.forName(className) 的方式查找 Classpath 是否存在这个 Class 的。
 		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null) && !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
 				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
 			return WebApplicationType.REACTIVE;

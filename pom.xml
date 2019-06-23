@@ -110,7 +110,7 @@
 			<modules>
 				<module>spring-boot-project</module>
 				<!-- LJK add -->
-				<module>spring-boot-samples</module>
+<!--				<module>spring-boot-samples</module>-->
 				<!-- Samples are built via the invoker plugin -->
 				<module>spring-boot-samples-invoker</module>
 				<module>spring-boot-tests</module>
