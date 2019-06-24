@@ -277,6 +277,8 @@ public class SpringApplication {
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
+
+		// 主要资源：是我们指定的，带有 @SpringBootApplication 注解的对象，用途：后面用到时，会详细分析Spring容器是如何解析这个 primarySources 的
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
 
 		// 通过 ClassPath 中存在的类，推断当前要是用哪一种web容器：SERVLET、REACTIVE、NONE
@@ -425,17 +427,27 @@ public class SpringApplication {
 		}
 	}
 
+	/**
+	 * 准备 Context
+	 */
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 			SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
 		context.setEnvironment(environment);
+
+		// 后期处理Context，用途：为 Context 设置一些功能
 		postProcessApplicationContext(context);
+
+		// 应用初始化，用途：调用 ApplicationContextInitializer接口方法。（此接口上面文章有描述）
 		applyInitializers(context);
+
+		// 发布：contextPrepared 事件
 		listeners.contextPrepared(context);
 		if (this.logStartupInfo) {
 			logStartupInfo(context.getParent() == null);
 			logStartupProfileInfo(context);
 		}
-		// Add boot specific singleton beans
+
+		// 注册单例Bean：把 args、printBanner bean对象注册到 BeanFactory中
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
 		if (printedBanner != null) {
@@ -445,10 +457,13 @@ public class SpringApplication {
 			((DefaultListableBeanFactory) beanFactory)
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
+
 		// Load the sources
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
 		load(context, sources.toArray(new Object[0]));
+
+		// 发布：contextLoaded 事件
 		listeners.contextLoaded(context);
 	}
 
@@ -712,11 +727,15 @@ public class SpringApplication {
 	 * apply additional processing as required.
 	 * @param context the application context
 	 */
+
 	protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
+		// beanName 生成器，用途：实例化Bean的时候，给Bean起名字的。（例如：一般对象名字，Class 首字母小写；有父类的，则是$child；等等
 		if (this.beanNameGenerator != null) {
 			context.getBeanFactory().registerSingleton(AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR,
 					this.beanNameGenerator);
 		}
+
+		// 如果有配置 ResourceLoader 则替换：ClassLoader、ResourceLoader
 		if (this.resourceLoader != null) {
 			if (context instanceof GenericApplicationContext) {
 				((GenericApplicationContext) context).setResourceLoader(this.resourceLoader);
@@ -725,6 +744,8 @@ public class SpringApplication {
 				((DefaultResourceLoader) context).setClassLoader(this.resourceLoader.getClassLoader());
 			}
 		}
+
+		// 设置 ConversionService，用途：Spring 类型转换，如：基本类型转换 String --> Double
 		if (this.addConversionService) {
 			context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
 		}
@@ -735,6 +756,12 @@ public class SpringApplication {
 	 * refreshed.
 	 * @param context the configured ApplicationContext (not refreshed yet)
 	 * @see ConfigurableApplicationContext#refresh()
+	 */
+
+	/**
+	 * 调用 ApplicationContextInitializer 接口方法
+	 *
+	 * 		此接口是在创建 SpringApplication 对象时，从 META-INF/spring.factories 加载的，具体参见上面的文章
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void applyInitializers(ConfigurableApplicationContext context) {
@@ -793,10 +820,17 @@ public class SpringApplication {
 	 * @param context the context to load beans into
 	 * @param sources the sources to load
 	 */
+
+	/**
+	 * 加载资源
+	 *
+	 * @param sources 资源数组，其中包括我们指定的带有 @SpringBootApplication 的Class
+	 */
 	protected void load(ApplicationContext context, Object[] sources) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+		// 创建 BeanDefinitionLoader，并配置必要参数，用途：支持多种方式 load，如：注解、XML、扫描 等等
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
@@ -807,6 +841,8 @@ public class SpringApplication {
 		if (this.environment != null) {
 			loader.setEnvironment(this.environment);
 		}
+
+		// 根据 resource 类型，进行load
 		loader.load();
 	}
 
@@ -1228,9 +1264,12 @@ public class SpringApplication {
 	 */
 	public Set<Object> getAllSources() {
 		Set<Object> allSources = new LinkedHashSet<>();
+		// 主要资源：是我们指定的，带有 @SpringBootApplication 注解的对象
 		if (!CollectionUtils.isEmpty(this.primarySources)) {
 			allSources.addAll(this.primarySources);
 		}
+
+		// 扩展资源：目前没有，这里可以自定义一些资源
 		if (!CollectionUtils.isEmpty(this.sources)) {
 			allSources.addAll(this.sources);
 		}

@@ -74,16 +74,34 @@ class BeanDefinitionLoader {
 	 * @param registry the bean definition registry that will contain the loaded beans
 	 * @param sources the bean sources
 	 */
+
+	/**
+	 * BeanDefinitionLoader 构造方法
+	 *
+	 * @param registry 在SpringBoot 流程中，这个类是 DefaultListableBeanFactory，用来注册 BeanDefinition。
+	 * @param sources 我们制定的资源
+	 */
 	BeanDefinitionLoader(BeanDefinitionRegistry registry, Object... sources) {
 		Assert.notNull(registry, "Registry must not be null");
 		Assert.notEmpty(sources, "Sources must not be empty");
+
+		// 保存所有的资源
 		this.sources = sources;
+
+		// 注解 BeanDefinitionReader，用途：用来加载 注解 Source
 		this.annotatedReader = new AnnotatedBeanDefinitionReader(registry);
+
+		// Xml BeanDefinitionReader，用途：用来加载 XML Source
 		this.xmlReader = new XmlBeanDefinitionReader(registry);
+
+		// Groovy BeanDefinitionReader，用途：用来加载 groovy Source
 		if (isGroovyPresent()) {
 			this.groovyReader = new GroovyBeanDefinitionReader(registry);
 		}
+
+		// scanner，用途：用来扫描指定包（basePackage 默认为 primarySource 的路径）中符合条件的内容（默认：保留被 @Component 系列标注对象，如：@Controller、@Service 等等，还有些其他默认规则）
 		this.scanner = new ClassPathBeanDefinitionScanner(registry);
+		// 排除当前的 sources，用途：这些 sources当前代码已经在处理了，防止 scanner 再次加载
 		this.scanner.addExcludeFilter(new ClassExcludeFilter(sources));
 	}
 
@@ -121,6 +139,12 @@ class BeanDefinitionLoader {
 	 * Load the sources into the reader.
 	 * @return the number of loaded beans
 	 */
+
+	/**
+	 * for 循环 sources 进行load
+	 *
+	 * @return 加载 BeanDefinition 数量的总和
+	 */
 	public int load() {
 		int count = 0;
 		for (Object source : this.sources) {
@@ -129,9 +153,17 @@ class BeanDefinitionLoader {
 		return count;
 	}
 
+	/**
+	 * 按 source 类型进行加载：Class、Resource、Package、CharSequence（字符串）
+	 *
+	 * @param source 资源
+	 * @return 加载 BeanDefinition 数量
+	 */
 	private int load(Object source) {
 		Assert.notNull(source, "Source must not be null");
 		if (source instanceof Class<?>) {
+
+			// 我们指定的 primarySources 是 Class 类型的，会走这段代码
 			return load((Class<?>) source);
 		}
 		if (source instanceof Resource) {
@@ -146,50 +178,80 @@ class BeanDefinitionLoader {
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
 
+	/**
+	 * load Class 类型的 source
+	 * @return 加载 BeanDefinition 的数量
+	 */
 	private int load(Class<?> source) {
 		if (isGroovyPresent() && GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
 			// Any GroovyLoaders added in beans{} DSL can contribute beans here
 			GroovyBeanDefinitionSource loader = BeanUtils.instantiateClass(source, GroovyBeanDefinitionSource.class);
+			// groovy 类型 load
 			load(loader);
 		}
+
+		// 如果 source 被 @Component 标注，则直接注册到容器中。（我们的 primarySource 在这里处理，会被注册到容器中。）
+		// @SpringBootApplication 也是 @Component（顺着 @SpringBootApplication 注解点进去网上找就能找到 @Component）
 		if (isComponent(source)) {
+			// 所谓注册，仅仅是把 source 存到一个 Map[name, source] 中，在后续流程会统一进行解析。
 			this.annotatedReader.register(source);
 			return 1;
 		}
 		return 0;
 	}
 
+	/**
+	 * load Groovy 类型的 source
+	 */
 	private int load(GroovyBeanDefinitionSource source) {
 		int before = this.xmlReader.getRegistry().getBeanDefinitionCount();
+
+		// 用 GroovyBeanDefinitionReader 进行加载
 		((GroovyBeanDefinitionReader) this.groovyReader).beans(source.getBeans());
 		int after = this.xmlReader.getRegistry().getBeanDefinitionCount();
 		return after - before;
 	}
 
+	/**
+	 * load resource 类型的 source
+	 */
 	private int load(Resource source) {
+		// source 后缀为 .groovy 则用 GroovyBeanDefinitionReader 进行加载
 		if (source.getFilename().endsWith(".groovy")) {
 			if (this.groovyReader == null) {
 				throw new BeanDefinitionStoreException("Cannot load Groovy beans without Groovy on classpath");
 			}
 			return this.groovyReader.loadBeanDefinitions(source);
 		}
+		// 其他一律用 XmlBeanDefinitionReader 加载
 		return this.xmlReader.loadBeanDefinitions(source);
 	}
 
+	/**
+	 * load Package 类型的 source
+	 */
 	private int load(Package source) {
+		// 直接用 ClassPathBeanDefinitionScanner 对 Package 路径进行扫描，加载符合条件的对象。（默认：保留被 @Component 系列标注对象，如：@Controller、@Service 等等，还有些其他默认规则）
 		return this.scanner.scan(source.getName());
 	}
 
+	/**
+	 * load 字符串 类型的 source，由于字符串可能表达多种含义，所以会尝试各种方式（上面介绍的方式）加载：
+	 *
+	 * 		- 先当成 Class 进行加载，成功则返回，失败则继续
+	 * 		- 再当成 Resource 进行加载，成功则返回，失败则继续
+	 * 		- 最后当成 Package 进行加载，成功则返回，失败则抛出异常：无效的 source
+	 */
 	private int load(CharSequence source) {
 		String resolvedSource = this.xmlReader.getEnvironment().resolvePlaceholders(source.toString());
-		// Attempt as a Class
+		// 尝试当做 Class 类型进行加载
 		try {
 			return load(ClassUtils.forName(resolvedSource, null));
 		}
 		catch (IllegalArgumentException | ClassNotFoundException ex) {
-			// swallow exception and continue
+			// 吞下异常并继续加载
 		}
-		// Attempt as resources
+		// 尝试当做 Resource 进行加载
 		Resource[] resources = findResources(resolvedSource);
 		int loadCount = 0;
 		boolean atLeastOneResourceExists = false;
@@ -202,11 +264,12 @@ class BeanDefinitionLoader {
 		if (atLeastOneResourceExists) {
 			return loadCount;
 		}
-		// Attempt as package
+		// 尝试当做 Package 进行加载
 		Package packageResource = findPackage(resolvedSource);
 		if (packageResource != null) {
 			return load(packageResource);
 		}
+		// 报错，无效的 source
 		throw new IllegalArgumentException("Invalid source '" + resolvedSource + "'");
 	}
 
