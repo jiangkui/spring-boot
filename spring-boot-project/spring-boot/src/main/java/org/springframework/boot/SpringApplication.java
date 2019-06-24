@@ -467,7 +467,11 @@ public class SpringApplication {
 		listeners.contextLoaded(context);
 	}
 
+	/**
+	 * 刷新 Context
+	 */
 	private void refreshContext(ConfigurableApplicationContext context) {
+		// 最终会调用 AbstractApplicationContext#refresh()。这个方法会做非常多的事情，刷新完，容器也就启动完毕了。包括：primarySource Class 的处理、单例Bean的实例化。
 		refresh(context);
 		if (this.registerShutdownHook) {
 			try {
