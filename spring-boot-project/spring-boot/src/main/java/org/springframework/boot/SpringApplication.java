@@ -412,6 +412,8 @@ public class SpringApplication {
 			environment = new EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,
 					deduceEnvironmentClass());
 		}
+
+		// 附加 PropertySource，用途：根据属性名，查找它的属性源。
 		ConfigurationPropertySources.attach(environment);
 		return environment;
 	}

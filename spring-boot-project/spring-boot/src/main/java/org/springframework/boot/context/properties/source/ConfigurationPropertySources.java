@@ -68,6 +68,13 @@ public final class ConfigurationPropertySources {
 	 * {@link ConfigurableEnvironment})
 	 * @see #get(Environment)
 	 */
+
+	/**
+	 * 附加一个 ConfigurationPropertySourcesPropertySource 属性源
+	 *
+	 * 功能：
+	 * 		根据属性名查找它的 PropertySource
+	 */
 	public static void attach(Environment environment) {
 		Assert.isInstanceOf(ConfigurableEnvironment.class, environment);
 		MutablePropertySources sources = ((ConfigurableEnvironment) environment).getPropertySources();
@@ -76,6 +83,7 @@ public final class ConfigurationPropertySources {
 			sources.remove(ATTACHED_PROPERTY_SOURCE_NAME);
 			attached = null;
 		}
+		// 添加 configurationProperties 属性源，内部包含了 所有的 PropertySources。此 PropertySource 可以根据 属性名查找对应的属性源
 		if (attached == null) {
 			sources.addFirst(new ConfigurationPropertySourcesPropertySource(ATTACHED_PROPERTY_SOURCE_NAME,
 					new SpringConfigurationPropertySources(sources)));
