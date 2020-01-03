@@ -10,8 +10,11 @@
 	<name>Spring Boot Build</name>
 	<description>Spring Boot Build</description>
 	<properties>
-		<revision>2.2.0.BUILD-SNAPSHOT</revision>
+		<revision>LJK-SNAPSHOT</revision>
 		<main.basedir>${basedir}</main.basedir>
+		<disable.checks>true</disable.checks>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<!-- Most elements are in profiles so they are stripped out during maven-flatten -->
 	<profiles>
@@ -24,7 +27,7 @@
 				</property>
 			</activation>
 			<properties>
-				<spring-javaformat.version>0.0.12</spring-javaformat.version>
+				<spring-javaformat.version>0.0.11</spring-javaformat.version>
 				<nohttp-checkstyle.version>0.0.1.RELEASE</nohttp-checkstyle.version>
 			</properties>
 			<build>
@@ -77,7 +80,7 @@
 									<encoding>UTF-8</encoding>
 									<sourceDirectories>${basedir}</sourceDirectories>
 									<includes>**/*</includes>
-									<excludes>**/.git/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class,**/spring-boot-gradle-plugin/build/**,**/spring-boot-gradle-plugin/bin/**</excludes>
+									<excludes>**/.git/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class,**/spring-boot-gradle-plugin/build/**</excludes>
 								</configuration>
 								<goals>
 									<goal>check</goal>
@@ -106,6 +109,8 @@
 			</build>
 			<modules>
 				<module>spring-boot-project</module>
+				<!-- LJK add -->
+<!--				<module>spring-boot-samples</module>-->
 				<!-- Samples are built via the invoker plugin -->
 				<module>spring-boot-samples-invoker</module>
 				<module>spring-boot-tests</module>

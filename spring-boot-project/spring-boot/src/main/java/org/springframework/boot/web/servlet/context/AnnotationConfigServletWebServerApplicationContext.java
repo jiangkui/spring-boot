@@ -68,8 +68,15 @@ public class AnnotationConfigServletWebServerApplicationContext extends ServletW
 	 * to be populated through {@link #register} calls and then manually
 	 * {@linkplain #refresh refreshed}.
 	 */
+
+	/**
+	 * 默认构造方法
+	 */
 	public AnnotationConfigServletWebServerApplicationContext() {
+		// BeanDefinitionReader 接口的实现类，用途：注册 Annotation 类型的 BeanDefinition
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+
+		// Scanner，用途：扫描 basePackage 下的内容（一般都是找注解）
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 

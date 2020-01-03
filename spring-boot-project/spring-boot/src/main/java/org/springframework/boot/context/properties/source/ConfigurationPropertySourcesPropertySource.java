@@ -30,19 +30,36 @@ import org.springframework.core.env.PropertySource;
  * @author Phillip Webb
  * @author Madhura Bhave
  */
+
+/**
+ * TODO 在 PropertySource 文章中进行介绍。
+ */
 class ConfigurationPropertySourcesPropertySource extends PropertySource<Iterable<ConfigurationPropertySource>>
 		implements OriginLookup<String> {
 
+	/**
+	 * @param source SpringConfigurationPropertySources 实例，内部持有 environment.propertySources
+	 */
 	ConfigurationPropertySourcesPropertySource(String name, Iterable<ConfigurationPropertySource> source) {
 		super(name, source);
 	}
 
+	/**
+	 * 查找属性值
+	 * @param name 属性名
+	 * @return 属性值
+	 */
 	@Override
 	public Object getProperty(String name) {
 		ConfigurationProperty configurationProperty = findConfigurationProperty(name);
 		return (configurationProperty != null) ? configurationProperty.getValue() : null;
 	}
 
+	/**
+	 * 查找属性来源
+	 * @param name 属性名
+	 * @return 属性源（持有此属性的 PropertySource）
+	 */
 	@Override
 	public Origin getOrigin(String name) {
 		return Origin.from(findConfigurationProperty(name));
@@ -57,11 +74,18 @@ class ConfigurationPropertySourcesPropertySource extends PropertySource<Iterable
 		}
 	}
 
+	/**
+	 * 查找配置属性
+	 * @param name 配置属性名
+	 * @return 配置属性（内部包含属性名、属性值、属性源）
+	 */
 	private ConfigurationProperty findConfigurationProperty(ConfigurationPropertyName name) {
 		if (name == null) {
 			return null;
 		}
+		// 此处迭代的其实就是 environment.propertySources
 		for (ConfigurationPropertySource configurationPropertySource : getSource()) {
+			// 循环各个 PropertySource，查找配置属性
 			ConfigurationProperty configurationProperty = configurationPropertySource.getConfigurationProperty(name);
 			if (configurationProperty != null) {
 				return configurationProperty;
