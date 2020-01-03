@@ -407,6 +407,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 			}
 		}
 
+		// 不是这个 selectImports 方法，这是内部类 AutoConfigurationGroup 的方法，上面还有一个 selectImports()
 		@Override
 		public Iterable<Entry> selectImports() {
 			if (this.autoConfigurationEntries.isEmpty()) {
