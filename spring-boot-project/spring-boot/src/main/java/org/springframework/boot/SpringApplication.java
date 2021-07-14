@@ -270,6 +270,8 @@ public class SpringApplication {
 	 */
 
 	/**
+	 * 从这里开始：SpringApplication.run(StartApp.class, args);
+	 *
 	 * SpringApplication 构造方法做了以下几件事：
 	 *      1. 推测容器类型
 	 *      2. 实例化 ApplicationContextInitializer
