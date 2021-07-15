@@ -288,6 +288,7 @@ public class SpringApplication {
 	 * 					- 注入的类，都放在：META-INF/spring.factories 的文件中。由 SpringFactoriesLoader 加载即可。
 	 * 				- 实现：是由 AutoConfigurationImportSelector 实现
 	 * 				- 调用：在 refresh() 中 invokeBeanFactoryPostProcessors() 调用的
+	 * 				- 源码：org.springframework.boot.autoconfigure.AutoConfigurationImportSelector#selectImports(org.springframework.core.type.AnnotationMetadata)
 	 * 			- 实例化Bean：
 	 * 				- 实现：在 refresh() 中 finishBeanFactoryInitialization() 实现的
 	 *			- 可以参考下这篇文章：https://mp.weixin.qq.com/s/bTUbYT_TLmzbNEp5Nd8M0A
