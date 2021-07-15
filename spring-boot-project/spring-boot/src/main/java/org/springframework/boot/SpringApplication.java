@@ -272,6 +272,8 @@ public class SpringApplication {
 	/**
 	 * 从这里开始：SpringApplication.run(StartApp.class, args);
 	 *
+	 * 优先参见自己的总结，有很多图：https://github.com/jiangkui/blog/blob/master/blogs/spring/spring-boot/spring-boot%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B.md
+	 *
 	 * SpringApplication 构造方法做了以下几件事：
 	 *      1. 推测容器类型
 	 *      2. 实例化 ApplicationContextInitializer
