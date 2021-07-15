@@ -274,6 +274,24 @@ public class SpringApplication {
 	 *
 	 * 优先参见自己的总结，有很多图：https://github.com/jiangkui/blog/blob/master/blogs/spring/spring-boot/spring-boot%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B.md
 	 *
+	 * 总结：
+	 * 		SpringBoot 的核心流程放在 SpringApplication#run() 方法中，这个方法做的事情说简单其实也很简单：
+	 * 			- 创建并配置 Environment：把所有的配置，全都塞到 Environment 中（配置文件、命令行参数、系统变量等等），方便后续使用。
+	 * 			- 创建并配置 ApplicationContext：并 load 相关 source（只加载了部分）（注册到 BeanFactory 中）
+	 * 		至于几个核心的事项，都是在 AbstractApplicationContext#refresh() 流程实现的：
+	 * 			- SpringBoot 最为牛逼的【揭秘自动配置原理】：即无需配置，导入一个支持 SpringBoot 的jar包就能直接用。
+	 * 				- 使用：
+	 * 					- 通过 @EnableAutoConfiguration 开启 SpringBoot 自动配置功能，SpringBoot 会根据依赖、自定义Bean、classpath下有没有某个类等来猜测你需要的bean
+	 * 					- 然后注入到Spring 容器内。
+	 * 				- 原理：
+	 * 					- 用条件注解：@ConditionalOnClass(xxx.class) 或其他形式来自动加载某些配置
+	 * 					- 注入的类，都放在：META-INF/spring.factories 的文件中。由 SpringFactoriesLoader 加载即可。
+	 * 				- 实现：是由 AutoConfigurationImportSelector 实现
+	 * 				- 调用：在 refresh() 中 invokeBeanFactoryPostProcessors() 调用的
+	 * 			- 实例化Bean：
+	 * 				- 实现：在 refresh() 中 finishBeanFactoryInitialization() 实现的
+	 *			- 可以参考下这篇文章：https://mp.weixin.qq.com/s/bTUbYT_TLmzbNEp5Nd8M0A
+	 *
 	 * SpringApplication 构造方法做了以下几件事：
 	 *      1. 推测容器类型
 	 *      2. 实例化 ApplicationContextInitializer
